@@ -8,21 +8,11 @@ spark.conf.set("materializationDataset","cadastro_produto")
 
 # COMMAND ----------
 
-# MAGIC %sql 
-# MAGIC
-# MAGIC select * from produtostablesilver
-
-# COMMAND ----------
-
 df = spark.read.format("bigquery").option("credentialsFile", "/dbfs/FileStore/gcloud/key/karhub_261f144c9490.json") \
       .option("parentProject", "karhub") \
       .option("project", "karhub") \
       .option("table",'kh_data_engineer_teste_roger_amaro') \
       .load()
-
-# COMMAND ----------
-
-df.filter("produto_numero_de_espirais is not null").display()
 
 # COMMAND ----------
 
@@ -46,7 +36,7 @@ df.groupBy("produto_categoria").agg(countDistinct("produto_codigo_original_fabri
 
 #Quantos veículos únicos (mesma marca e modelo) temos na base por produto?
 
-df.filter("produto_codigo_original_fabricante is not null").groupBy("produto_codigo_original_fabricante").agg(countDistinct("veiculo_marca", "veiculo_modelo").alias("qtd_veiculos")).display()
+df.filter("produto_codigo_original_fabricante is not null").groupBy("produto_codigo_original_fabricante").agg(countDistinct("veiculo_marca", "veiculo_modelo").alias("qtd_veiculos")).orderBy(col("qtd_veiculos").desc()).display()
 
 
 # COMMAND ----------
@@ -60,14 +50,3 @@ df.filter("veiculo_marca is not null").groupBy("veiculo_marca", "veiculo_modelo"
 
 ## qual ano possui mais peças disponíveis?
 df.filter("veiculo_marca is not null").groupBy("veiculo_ano").agg(countDistinct("produto_codigo_original_fabricante").alias("qtd_produtos")).select(max("veiculo_ano").alias("Veículo Ano"), max('qtd_produtos').alias('quantidade de produtos disponíveis')).display()
-
-# COMMAND ----------
-
-df.display()
-
-# COMMAND ----------
-
-## quantos veículos não possuem nenhuma peça compativel?
-
-df.groupBy("veiculo_marca", "veiculo_modelo").agg(countDistinct("produto_codigo_original_fabricante").alias("qtd_produtos")).display()
-
